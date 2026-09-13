@@ -1,0 +1,897 @@
+<title>台股決策台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  color-scheme: light;
+  --plane: #f4f5f3;
+  --surface: #fcfcfb;
+  --surface-2: #eff1ee;
+  --ink: #14171a;
+  --ink-2: #4e5457;
+  --muted: #8a8f8c;
+  --line: #e2e3de;
+  --hair: rgba(11,11,11,0.10);
+  --accent: #14595c;
+  --accent-ink: #0e4144;
+  --accent-soft: #e2edec;
+  --up: #d03b3b;      /* 台股慣例：紅漲 */
+  --down: #0ca30c;    /* 綠跌 */
+  --warn: #b57200;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --shadow: 0 1px 2px rgba(11,11,11,.05), 0 8px 24px -18px rgba(11,11,11,.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #222221;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --line: #2c2c2a;
+    --hair: rgba(255,255,255,0.10);
+    --accent: #5aabaa;
+    --accent-ink: #8fcbc9;
+    --accent-soft: #16302f;
+    --up: #e35c5c;
+    --down: #35b935;
+    --warn: #e0a534;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #222221;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --line: #2c2c2a;
+  --hair: rgba(255,255,255,0.10);
+  --accent: #5aabaa;
+  --accent-ink: #8fcbc9;
+  --accent-soft: #16302f;
+  --up: #e35c5c;
+  --down: #35b935;
+  --warn: #e0a534;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 72px; }
+h1, h2, h3 { font-family: "Noto Serif TC", Georgia, serif; font-weight: 700; text-wrap: balance; margin: 0; }
+.mono { font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace; font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- header ---------- */
+header {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.head-in {
+  max-width: 1180px; margin: 0 auto; padding: 26px 20px 22px;
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; justify-content: space-between;
+}
+h1 { font-size: clamp(26px, 3.4vw, 38px); letter-spacing: -.01em; }
+.sub { color: var(--ink-2); font-size: 14px; margin-top: 4px; }
+.stamp { font-size: 13px; color: var(--muted); text-align: right; }
+
+/* ---------- instrument strip ---------- */
+.strip {
+  display: grid; gap: 1px; background: var(--line);
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  margin-top: 24px; box-shadow: var(--shadow);
+}
+.cellv { background: var(--surface); padding: 12px 14px; }
+.cellv .k { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.cellv .v { font-size: 19px; font-weight: 500; margin-top: 2px; }
+.cellv .d { font-size: 12.5px; color: var(--ink-2); }
+.up { color: var(--up); }
+.down { color: var(--down); }
+
+/* ---------- sections ---------- */
+section { margin-top: 44px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+h2 { font-size: 21px; }
+.sec-note { color: var(--muted); font-size: 13.5px; }
+.rule { height: 1px; background: var(--line); margin: 12px 0 20px; }
+
+/* ---------- gate ---------- */
+.gates { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.gate {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--shadow);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex: none; }
+.dot.on { background: var(--down); }
+.dot.off { background: var(--up); }
+.gate .t { font-weight: 500; }
+.gate .s { font-size: 13px; color: var(--ink-2); }
+
+.chg {
+  font-size: 13px; font-weight: 600; margin-left: 7px;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+}
+.churn .chg { font-size: 12px; margin-left: 6px; }
+
+/* ---------- 長期持有 ---------- */
+.ltwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+.lthead { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.lthead .lab { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.lthead .val { font-size: 20px; font-weight: 500; margin-top: 2px; }
+.ltnote { font-size: 12px; color: var(--warn); padding-top: 0 !important; }
+.ltfoot { margin-top: 11px; font-size: 11.5px; color: var(--muted); line-height: 1.65; }
+
+/* ---------- 風險事件 ---------- */
+.riskblock {
+  border-left: 3px solid var(--warn);
+  padding-left: 11px; margin-left: -1px;
+}
+.chiplab.riskflag { color: var(--warn); font-weight: 700; }
+
+/* ---------- 觀察池異動 ---------- */
+.uni { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+       padding: 16px 18px; box-shadow: var(--shadow); }
+.uni .umeta { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+.uni .umeta b { color: var(--ink); }
+.ugrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 620px) { .ugrid { grid-template-columns: 1fr; } }
+.ucol { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 13px; }
+.ucol .ulab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+              color: var(--muted); margin-bottom: 7px; }
+.ucol.uadd .ulab { color: var(--up); }
+.ucol.udrop .ulab { color: var(--muted); }
+.ucol .uitem { font-size: 13px; line-height: 1.8; }
+.ucol .uitem .uc { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.uni .unote { margin-top: 12px; font-size: 12px; color: var(--ink-2); line-height: 1.75;
+              border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* ---------- 掉出榜單 ---------- */
+.churn {
+  margin-top: 14px; border: 1px dashed var(--line); border-radius: 10px;
+  padding: 12px 16px; background: transparent;
+}
+.churn .clab {
+  font-size: 11px; letter-spacing: .08em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.churn .crow { font-size: 13px; line-height: 1.7; }
+.churn .crow .cn { font-weight: 700; }
+.churn .crow .cc { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.churn .crow .cwhy { color: var(--ink-2); }
+.churn .cbad {
+  margin: 3px 0 6px 0; font-size: 12px; color: var(--warn);
+  border-left: 2px solid var(--warn); padding-left: 8px; line-height: 1.55;
+}
+.churn .cnote {
+  margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line);
+  font-size: 11.5px; color: var(--muted); line-height: 1.6;
+}
+.churn .cnote b { color: var(--warn); }
+
+/* 在榜天數 */
+.streak {
+  font-size: 11px; padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--hair); color: var(--ink-2); margin-left: 6px;
+}
+.streak.fresh { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* ---------- 個股歷史紀錄 ---------- */
+.rec { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.rec .rlab {
+  font-size: 11px; letter-spacing: .08em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.rec .rhead { font-size: 13.5px; line-height: 1.6; }
+.rec .rhead b { font-variant-numeric: tabular-nums; }
+.rec .tally { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.rec .eps { margin-top: 7px; display: flex; flex-direction: column; gap: 3px; }
+.rec .ep {
+  display: flex; gap: 8px; align-items: baseline;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.rec .ep .d { color: var(--muted); min-width: 78px; }
+.rec .ep .r { min-width: 52px; font-weight: 600; }
+.rec .ep .w { color: var(--ink-2); font-size: 11.5px; }
+.rec .rnote { margin-top: 7px; font-size: 11px; color: var(--muted); line-height: 1.55; }
+
+/* ---------- 基準率 ---------- */
+.baserate {
+  border: 1px solid var(--line); border-left: 3px solid var(--warn);
+  background: var(--surface); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.baserate .headline { font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.baserate .headline .hl { color: var(--warn); font-variant-numeric: tabular-nums; }
+.baserate .grid {
+  display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 8px;
+  font-size: 12.5px; color: var(--ink-2);
+}
+.baserate .grid b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.baserate .foot { margin-top: 7px; font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+/* ---------- pick cards ---------- */
+.cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px; box-shadow: var(--shadow);
+}
+.card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.name { font-family: "Noto Serif TC", serif; font-size: 19px; font-weight: 700; }
+.code { color: var(--muted); font-size: 13px; margin-left: 6px; }
+.badge {
+  font-size: 11px; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--hair); white-space: nowrap;
+}
+.px { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin: 14px 0 12px; }
+.px div { border-left: 2px solid var(--line); padding-left: 9px; }
+.px .lab { font-size: 11px; color: var(--muted); letter-spacing: .05em; white-space: nowrap; }
+.px .val { font-size: 16px; font-weight: 500; }
+.px .val.tgt { color: var(--up); }
+.px .val.stp { color: var(--down); }
+ul.why { margin: 0; padding-left: 17px; color: var(--ink-2); font-size: 13.5px; }
+.chipblock { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.chiplab { font-size: 11px; letter-spacing: .09em; color: var(--accent-ink); margin-bottom: 4px; }
+.valrow { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); }
+.valrow b { font-weight: 500; color: var(--ink); }
+.valwarn { margin-top: 5px; font-size: 12.5px; color: var(--warn); }
+.newsrow { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--ink-2); margin: 4px 0; }
+.nlvl { flex: none; font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; margin-top: 2px; }
+.n-warn { color: var(--warn); } .n-good { color: var(--up); } .n-info { color: var(--muted); }
+.newsrow a { color: var(--accent); }
+.nkind {
+  flex: none; font-size: 10.5px; padding: 1px 6px; border-radius: 4px;
+  margin-top: 2px; letter-spacing: .04em;
+}
+.k-fact { background: var(--accent-soft); color: var(--accent-ink); }
+.k-op { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+.ntext { display: block; }
+.nwhy { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.55; }
+.newsbias {
+  margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--line);
+  font-size: 11.5px; color: var(--muted); line-height: 1.6;
+}
+.newsbias b { color: var(--warn); }
+.datawarn {
+  margin-top: 20px; padding: 13px 16px; border-radius: 10px;
+  border: 1px solid var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent);
+  color: var(--ink); font-size: 14px;
+}
+.datawarn b { color: var(--warn); }
+.datawarn ul { margin: 6px 0 0; padding-left: 18px; }
+.dataok { margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+.newsbar { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.7; }
+.grp { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted); }
+.verdict-tag { font-size: 11px; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; }
+.v-use { color: var(--down); } .v-show { color: var(--warn); } .v-drop { color: var(--muted); }
+ul.why li { margin: 2px 0; }
+.empty {
+  background: var(--surface); border: 1px dashed var(--axis); border-radius: 12px;
+  padding: 22px; color: var(--ink-2);
+}
+.empty strong { color: var(--ink); }
+
+/* ---------- tables ---------- */
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 9px 14px; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th {
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  font-weight: 500; border-bottom: 1px solid var(--line); background: var(--surface-2);
+}
+tbody tr + tr td { border-top: 1px solid var(--line); }
+td.num, th.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- chart ---------- */
+.chart-box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 8px; box-shadow: var(--shadow); }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.legend span.sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: var(--shadow); opacity: 0;
+  transition: opacity .12s; z-index: 5; color: var(--ink);
+}
+.tip b { font-weight: 500; }
+.rel { position: relative; }
+
+/* ---------- callout ---------- */
+.callout {
+  border-left: 3px solid var(--warn); background: var(--surface); border-radius: 0 10px 10px 0;
+  padding: 14px 18px; box-shadow: var(--shadow);
+}
+.callout h3 { font-size: 16px; margin-bottom: 4px; }
+.callout p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; }
+footer { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+code { font-family: "IBM Plex Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+@media (max-width: 880px) { .strip { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<script id="payload" type="application/json">__PAYLOAD__</script>
+
+<header>
+  <div class="head-in">
+    <div>
+      <h1>台股決策台</h1>
+      <div class="sub">每日篩選 · 進出場規則 · 持股風控</div>
+    </div>
+    <div class="stamp">
+      收盤資料 <span class="mono" id="dataDate"></span><br>
+      <b>訊號適用於 <span class="mono" id="nextDay"></span> 開盤</b><br>
+      產生時間 <span class="mono" id="genAt"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="dataWarn"></div>
+  <div class="strip" id="strip"></div>
+
+  <section>
+    <div class="sec-head"><h2>下一個交易日能不能進場</h2><span class="sec-note">訊號用今天收盤價算，明天開盤才成交——回測也是這樣假設的</span></div>
+    <div class="rule"></div>
+    <div class="gates" id="gates"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>波段池 · 明天可以進場的新機會</h2><span class="sec-note">持有 1–4 週 · 動能與突破 · ATR 移動停損</span></div>
+    <div class="rule"></div>
+    <div class="newsbar" id="newsbar"></div>
+    <div id="swing"></div>
+    <div id="swing-churn"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>長線池 · 明天可以進場的新機會</h2><span class="sec-note">持有數月 · 長期趨勢與回檔控制 · 跌破 120MA 出場</span></div>
+    <div class="rule"></div>
+    <div id="position"></div>
+    <div id="position-churn"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>長期持有 · 不套用選股規則</h2><span class="sec-note">3–5 年的部位，只看損益；波段規則套上去會叫你每個月出場好幾次</span></div>
+    <div class="rule"></div>
+    <div id="longterm"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>我的持股 · 已經買的該不該留</h2><span class="sec-note">由出場規則決定，跟上面的名單無關——名單換人不代表要賣</span></div>
+    <div class="rule"></div>
+    <div id="holdings"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>觀察池 · 每月依成交值重排</h2><span class="sec-note">掃描範圍本身會變動，不是固定名單</span></div>
+    <div class="rule"></div>
+    <div id="universe"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>這套規則到底有沒有用</h2><span class="sec-note">2024-08 ~ 2026-08 回測，含手續費、證交稅、滑價</span></div>
+    <div class="rule"></div>
+    <div class="callout" id="verdict"></div>
+    <div class="chart-box rel" style="margin-top:16px">
+      <div class="legend" id="legend"></div>
+      <div id="chart"></div>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:16px">
+      <div>
+        <div class="sec-note" style="margin-bottom:6px">各出場原因</div>
+        <div class="tw"><table id="exitTable"></table></div>
+      </div>
+      <div>
+        <div class="sec-note" style="margin-bottom:6px">樣本內 / 樣本外切分</div>
+        <div class="tw"><table id="oosTable"></table></div>
+      </div>
+    </div>
+    <div style="margin-top:22px">
+      <div class="sec-head"><h3 style="font-size:17px">因子檢定（籌碼 + 基本面）</h3>
+        <span class="sec-note">IC = 因子值高的股票未來 20 日是否真的漲比較多。樣本內外同號且樣本外 &gt; 0.02 才採用</span></div>
+      <div class="tw" style="margin-top:8px"><table id="factorTable"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>方法與限制</h2></div>
+    <div class="rule"></div>
+    <div class="cards">
+      <div class="card">
+        <div class="name" style="font-size:16px">訊號怎麼來的</div>
+        <ul class="why" style="margin-top:8px">
+          <li>波段：站上 20MA 且 20MA&gt;60MA、距 60 日高點 5% 內、5 日均量放大、RSI 未過熱，再依動能排序取前 5。</li>
+          <li>長線：站上 120MA、60MA&gt;120MA、120 日動能為正、距 120 日高點回檔 15% 內。</li>
+          <li>籌碼：三大法人 20 日、外資 5 日買超比、外資連買天數、券資比、投信連買天數，加權後當加分項，上限 1.5。</li>
+          <li>觀察池：<b>每月最後一個交易日依近 60 日日均成交值重排前 100 名</b>，套用到下個月，再聯集手上的持股。名單會自己換人，見下方「觀察池」一節。</li>
+          <li>基本面：暫時關閉，池中只有不到一半的股票有完整月營收與財報資料，補齊後會重新檢定再開啟。</li>
+          <li>月營收與財報一律用「公告日」對齊（次月 10 日、季末後 45 天），不是資料期間，避免偷看未來。</li>
+          <li>不做任何否決規則：外資賣超否決與營收衰退否決都試過，樣本外都讓報酬變差，已停用。</li>
+          <li>目標價由前波高點與 ATR 推估；另提供本益比河流估值目標。</li>
+          <li>新聞旗標與行事曆只顯示、不計分——沒有歷史新聞資料可以驗證它有沒有用，所以不讓它影響排序。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="name" style="font-size:16px">出場規則</div>
+        <ul class="why" style="margin-top:8px">
+          <li>波段：跌破 20MA 連兩日、2.5×ATR 移動停損、-8% 硬停損、持有滿 60 個交易日。</li>
+          <li>長線：跌破 120MA、自波段高點回落 20%。</li>
+          <li>訊號在收盤後產生，隔日開盤成交，回測沒有用到當日未來資訊。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="name" style="font-size:16px">這份報告不能做什麼</div>
+        <ul class="why" style="margin-top:8px">
+          <li>觀察池的選擇偏誤已在 2026-09 修掉（改成每月用當時的成交值重排），但<b>兩年回測那組數字是在舊的固定 106 檔上跑的</b>，仍然帶著偏誤，別拿它當基準。乾淨的數字看十年那組。</li>
+          <li>已下市、被合併的公司沒有可靠歷史，殘存的存活偏誤修不掉，所有回測數字仍略為偏高。</li>
+          <li>波段持有上限 60 日這個參數是看了樣本外結果才決定的，該區間的數字已不是乾淨的樣本外。</li>
+          <li>期間剛好是大多頭，趨勢加停損的策略在這種環境天生跑輸買進持有。</li>
+          <li>沒有納入產業循環、公司治理、法說會與新聞面判斷。</li>
+          <li>籌碼因子的樣本外只有一年、只有一種市場環境，IC 值 0.03~0.05 屬於很弱的訊號。</li>
+          <li>這不是投資建議，做決定與承擔盈虧的都是你。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('payload').textContent);
+  const pct = (x, dp = 1) => (x * 100).toFixed(dp) + '%';
+  const sgn = (x, dp = 2) => (x >= 0 ? '+' : '') + (x * 100).toFixed(dp) + '%';
+  const cls = x => x > 0 ? 'up' : (x < 0 ? 'down' : '');
+  const arrow = x => x > 0 ? '▲' : (x < 0 ? '▼' : '－');
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+  document.getElementById('dataDate').textContent = D.data_date;
+  const nd = document.getElementById('nextDay');
+  if (nd) nd.textContent = (D['訊號適用日'] || '') + '（若逢假日順延）';
+  document.getElementById('genAt').textContent = D.generated_at;
+
+  /* ---- 儀表條 ---- */
+  const labels = { TWII: '加權指數', SOX: '費城半導體', IXIC: '那斯達克', GSPC: 'S&P 500', VIX: 'VIX 恐慌指數', DXY: '美元指數', USDTWD: '美元兌台幣', US10Y: '美債 10 年殖利率' };
+  document.getElementById('strip').innerHTML = Object.entries(D.macro).map(([k, v]) => `
+    <div class="cellv">
+      <div class="k">${labels[k] || k}</div>
+      <div class="v num">${v.close.toLocaleString()}</div>
+      <div class="d"><span class="${cls(v['日變動'])}">${arrow(v['日變動'])} ${sgn(v['日變動'])}</span>
+        <span style="color:var(--muted)">· 5日 ${sgn(v['五日變動'], 1)}</span></div>
+    </div>`).join('');
+
+  /* ---- 進場閘門 ---- */
+  const r = D.regime;
+  const gate = (title, ok, s) => `<div class="gate"><span class="dot ${ok ? 'on' : 'off'}"></span>
+      <div><div class="t">${title}：${ok ? '可以開新倉' : '暫停開新倉'}</div><div class="s">${s}</div></div></div>`;
+  document.getElementById('gates').innerHTML =
+    gate('波段池', r['波段可進場'], `${r['來源']}站上 60 日均線才開波段倉`) +
+    gate('長線池', r['長線可進場'], `${r['來源']}站上 120 日均線才建長線部位`) +
+    `<div class="gate"><span class="dot" style="background:var(--accent)"></span><div>
+       <div class="t">觀察池廣度 ${pct(r['觀察池站上60MA比例'], 0)}</div>
+       <div class="s">${D['觀察池檔數'] || ''} 檔中站上 60 日均線的比例，低於 50% 代表多數個股轉弱</div></div></div>`;
+
+  /* ---- 選股卡 ---- */
+  const card = p => `<div class="card">
+    <div class="card-top">
+      <div><span class="name">${esc(p.name)}</span><span class="code mono">${p.code}</span></div>
+      <span class="badge">技術 ${(p['技術分'] ?? 0).toFixed(2)} ｜籌碼 ${(p['籌碼分'] ?? 0).toFixed(2)} ｜基本 ${(p['基本分'] ?? 0).toFixed(2)}</span>
+    </div>
+    ${(() => {
+      /* 只看連續天數會說謊：第1天上榜、第2天被擠掉、第3天又上榜，
+         連續天數歸 1，就會寫成「今天第一次上榜」——但那是第二次。
+         所以同時看區間內總次數。 */
+      const h = p['上榜紀錄']; if (!h || !h['連續天數']) return '';
+      const st = h['連續天數'], n = h['區間內次數'], back = h['回看天數'];
+      let txt, fresh = false;
+      if (st > 1) {
+        txt = `連續在榜第 ${st} 天`;
+      } else if (n <= 1) {
+        txt = `近 ${back} 個交易日首次上榜`; fresh = true;
+      } else {
+        txt = `今天重新上榜　近 ${back} 日第 ${n} 次${h['上次上榜'] ? `　上次 ${h['上次上榜']}` : ''}`;
+      }
+      return `<div style="margin-top:6px"><span class="streak ${fresh ? 'fresh' : ''}">${esc(txt)}</span></div>`;
+    })()}
+    <div class="px">
+      <div><div class="lab">現價</div><div class="val num">${p['現價'].toLocaleString()}${
+        p['當日漲跌'] !== undefined ? `<span class="chg ${p['當日漲跌'] >= 0 ? 'up' : 'down'}">${p['當日漲跌'] >= 0 ? '+' : ''}${p['當日漲跌'].toFixed(2)}%</span>` : ''}</div></div>
+      <div><div class="lab">建議停損</div><div class="val stp num">${p['建議停損'].toLocaleString()}</div></div>
+      <div><div class="lab">保守目標</div><div class="val tgt num">${p['目標價_保守'].toLocaleString()}</div></div>
+      <div><div class="lab">樂觀目標</div><div class="val tgt num">${p['目標價_樂觀'].toLocaleString()}</div></div>
+    </div>
+    <ul class="why">${p['理由'].map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    ${(p['籌碼'] && p['籌碼'].length) ? `<div class="chipblock">
+      <div class="chiplab">籌碼面</div>
+      <ul class="why">${p['籌碼'].map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    ${(p['基本面'] && p['基本面'].length) ? `<div class="chipblock">
+      <div class="chiplab">基本面</div>
+      <ul class="why">${p['基本面'].map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    ${(() => {
+      /* 這一段刻意寫「幾次裡有幾次」而不是百分比：每檔的獨立事件中位數只有
+         5~8 次，n=8 的勝率誤差約 ±35 個百分點，寫成百分比會像機率估計。
+         而且實測顯示個股在這套系統裡的過去表現對未來沒有預測力
+         （前後兩期勝率秩相關 −0.03），所以這是紀錄，不是機率。 */
+      const r = p['歷史紀錄']; if (!r) return '';
+      const sg = v => (v >= 0 ? 'up' : 'down');
+      const pn = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+      return `<div class="rec">
+        <div class="rlab">這檔在這套規則下的歷史紀錄</div>
+        <div class="rhead">系統選過它 <span class="tally">${r.n}</span> 次，
+          其中 <span class="tally ${r.wins > r.losses ? 'up' : 'down'}">${r.wins}</span> 次賺、
+          <span class="tally">${r.losses}</span> 次賠　·
+          中位 <b class="${sg(r.median)}">${pn(r.median)}</b>
+          最好 <b class="up">${pn(r.best)}</b>
+          最差 <b class="down">${pn(r.worst)}</b>
+          平均抱 <b>${r.hold_days.toFixed(0)}</b> 天</div>
+        <div class="eps">${(r.recent || []).map(e => `<div class="ep">
+          <span class="d mono">${e.date}</span>
+          <span class="r ${sg(e.ret)}">${pn(e.ret)}</span>
+          <span class="w">抱 ${e.days} 天 · ${esc(e.why)}</span></div>`).join('')}</div>
+        <div class="rnote">這是紀錄不是機率——${r.n} 次的樣本算不出可信的勝率，
+          而且實測顯示個股在這套系統裡的過去表現對未來沒有預測力（相關性 −0.03）。
+          上面列的是最近 ${Math.min(4, r.n)} 次。</div>
+      </div>`;
+    })()}
+    ${(() => {
+      /* 風險事件（處置、注意、增資）跟一般行事曆（除權息、財報期限）分開。
+         前者會改變「你能怎麼交易」——被處置就是分盤撮合加預收款券，
+         停損單不一定砍得掉。這種事不能跟除息日長得一樣。 */
+      const ev = p['事件'] || []; if (!ev.length) return '';
+      const warn = ev.filter(e => e.level === 'warn');
+      const rest = ev.filter(e => e.level !== 'warn');
+      const li = e => `<li>${e.days === 0 ? '就是今天' : `${e.days} 天後`}　${esc(e.type)}（${e.date}）${e.note ? '　' + esc(e.note) : ''}</li>`;
+      return (warn.length ? `<div class="chipblock riskblock">
+        <div class="chiplab riskflag">⚠ 風險事件</div>
+        <ul class="why">${warn.map(li).join('')}</ul></div>` : '')
+        + (rest.length ? `<div class="chipblock">
+        <div class="chiplab">行事曆</div>
+        <ul class="why">${rest.map(li).join('')}</ul></div>` : '');
+    })()}
+    ${(p['新聞'] && p['新聞'].length) ? `<div class="chipblock">
+      <div class="chiplab">新聞　<span style="text-transform:none;letter-spacing:0">只顯示、不計分</span></div>
+      ${p['新聞'].map(n => {
+        /* 「事實」與「觀點」一定要分開標。目標價這種東西看起來最像資訊、
+           實際資訊量最低——它是別人的預估，不是已經發生的事。 */
+        const dir = n.direction || (n.level === 'warn' ? '利空' : (n.level === 'good' ? '利多' : '中性'));
+        const cls = dir === '利多' ? 'n-good' : (dir === '利空' ? 'n-warn' : 'n-info');
+        return `<div class="newsrow">
+        <span class="nlvl ${cls}">${esc(dir)}</span>
+        <span class="nkind ${n.kind === '觀點' ? 'k-op' : 'k-fact'}">${esc(n.kind || '')}</span>
+        <span class="ntext">${esc(n.text)}${n.source ? ` <a href="${esc(n.source)}" target="_blank" rel="noopener">來源</a>` : ''}
+          ${n.why ? `<span class="nwhy">${esc(n.why)}</span>` : ''}</span>
+      </div>`;
+      }).join('')}</div>` : ''}
+    ${p['估值'] ? (() => {
+      const v = p['估值'], below = v['估值目標_中位'] < p['現價'];
+      return `<div class="chipblock">
+        <div class="chiplab">本益比河流</div>
+        <div class="valrow">
+          <span>近四季 EPS <b class="num">${v['近四季EPS']}</b></span>
+          <span>目前本益比 <b class="num">${v['目前本益比']}</b>（自身區間 ${v['本益比區間'][0]}–${v['本益比區間'][1]}）</span>
+        </div>
+        <div class="valrow">
+          <span>回到中位估值 <b class="num ${below ? 'down' : 'up'}">${v['估值目標_中位'].toLocaleString()}</b></span>
+          <span>回到高標估值 <b class="num ${v['估值目標_樂觀'] < p['現價'] ? 'down' : 'up'}">${v['估值目標_樂觀'].toLocaleString()}</b></span>
+        </div>
+        ${below ? '<div class="valwarn">以自身歷史本益比看，現價已高於中位估值</div>' : ''}
+      </div>`;
+    })() : ''}
+  </div>`;
+
+  /* ---- 基準率：這一池歷史上實際發生過什麼 ----
+     刻意每池只有一個數字、不隨個股變動。實測顯示總分在候選池裡的排序能力
+     接近零，依個股給不同機率會是假精確。 */
+  const baseRate = b => !b ? '' : `<div class="baserate">
+    <div class="headline">歷史上這類進場 <span class="hl">${b['勝率'].toFixed(0)}%</span> 會賺，
+      中位數 <span class="hl">${b['中位數'] >= 0 ? '+' : ''}${b['中位數'].toFixed(1)}%</span>，
+      平均持有 <span class="hl">${b['持有天數'].toFixed(0)}</span> 天</div>
+    <div class="grid">
+      <span>平均報酬 <b>${b['平均'] >= 0 ? '+' : ''}${b['平均'].toFixed(1)}%</b></span>
+      <span>賺超過 20% 的比例 <b>${b['大賺比例'].toFixed(0)}%</b></span>
+      <span>最差一成 <b>${b['最差一成'].toFixed(1)}%</b></span>
+      <span>最好一成 <b>+${b['最好一成'].toFixed(1)}%</b></span>
+      <span>樣本 <b>${b['樣本數'].toLocaleString()}</b> 筆</span>
+      <span>前半段 <b>${b['樣本內勝率'].toFixed(0)}%</b> / 後半段 <b>${b['樣本外勝率'].toFixed(0)}%</b></span>
+    </div>
+    <div class="foot">
+      平均遠高於中位數，代表獲利集中在少數幾筆——一半以上的交易是賠錢出場的，錢從那少數幾筆來。
+      勝率誤差 ±${b['誤差'].toFixed(0)} 個百分點。樣本期間 ${esc(b['期間'])}，
+      同一段趨勢只計一次，資料尾端未走完的單子已剔除。
+      這段期間是多頭，換到空頭市場這些數字會更難看。
+    </div>
+  </div>`;
+
+  const renderPicks = (id, list, emptyMsg, br) => {
+    const el = document.getElementById(id);
+    el.innerHTML = (list.length ? baseRate(br) : '')
+      + (list.length
+        ? `<div class="cards">${list.map(card).join('')}</div>`
+        : `<div class="empty">${emptyMsg}</div>`);
+  };
+  const BR = D['基準率'] || {};
+
+  /* ---- 昨天在榜、今天掉出去的 ----
+     這一區存在的唯一理由是防止一個很貴的誤解：掉出榜單不是賣出訊號。
+     實測「掉出榜就賣」：波段池平均報酬 +4.95% → −0.05%，
+     賺超過 20% 的比例 14.1% → 0.5%。 */
+  const renderChurn = (id, list) => {
+    const el = document.getElementById(id);
+    if (!el || !list || !list.length) { if (el) el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="churn">
+      <div class="clab">昨天在榜、今天掉出去的</div>
+      ${list.map(x => `<div class="crow">
+        <span class="cn">${esc(x.name)}</span><span class="cc mono">${x.code}</span>
+        <span class="cc">${x['現價'].toLocaleString()}</span>${
+          x['當日漲跌'] !== undefined ? `<span class="chg ${x['當日漲跌'] >= 0 ? 'up' : 'down'}">${x['當日漲跌'] >= 0 ? '+' : ''}${x['當日漲跌'].toFixed(2)}%</span>` : ''}
+        　<span class="cwhy">${x['原因'].map(esc).join('；')}</span>
+        ${(x['利空'] || []).map(t => `<div class="cbad">⚠ 利空：${esc(t)}</div>`).join('')}
+      </div>`).join('')}
+      <div class="cnote"><b>這不是賣出訊號。</b>這份名單回答的是「明天可以<em>買</em>什麼」，
+        手上的部位由出場規則管（−8%、2.5×ATR 移動停損、連兩日跌破 20MA、60 日上限），
+        跟排名無關。實測過「掉出榜就賣」：波段池平均報酬從 +4.95% 掉到 −0.05%，
+        賺超過 20% 的比例從 14.1% 崩到 0.5%——因為大贏家幾乎都在第 1~2 天就掉出榜了。</div>
+    </div>`;
+  };
+  const CH = D['掉出榜單'] || {};
+  renderChurn('swing-churn', CH.swing);
+  renderChurn('position-churn', CH.position);
+
+  /* ---- 觀察池：掃描範圍本身每月會換 ----
+     為什麼要把這件事攤開講：這裡的「剔除」跟上面「掉出榜單」的剔除完全是兩回事。
+     上面是「條件不符合，今天不推薦買」；這裡是「這檔股票根本不在掃描範圍內了」。
+     不分清楚的話，使用者看到某檔消失會以為程式壞了。 */
+  (() => {
+    const el = document.getElementById('universe');
+    const U = D['觀察池'];
+    if (!el) return;
+    if (!U) { el.innerHTML = ''; return; }
+    if (U.fallback) {
+      el.innerHTML = `<div class="uni"><div class="umeta">
+        目前使用固定名單 <b>${U['檔數']} 檔</b>（${esc(U['說明'] || '')}）。
+        跑一次 <code>python src/universe_live.py</code> 就會切換成每月重排。</div></div>`;
+      return;
+    }
+    const col = (cls, lab, list, empty) => `<div class="ucol ${cls}">
+      <div class="ulab">${lab}（${list.length}）</div>
+      ${list.length ? list.map(x => `<div class="uitem">${esc(x.name)}<span class="uc mono">${esc(x.code)}</span></div>`).join('')
+                    : `<div class="uitem" style="color:var(--muted)">${empty}</div>`}</div>`;
+    const held = U['持股保留'] || [];
+    el.innerHTML = `<div class="uni">
+      <div class="umeta">
+        目前 <b>${U['檔數']} 檔</b>　·　排名基準日 <b class="mono">${esc(U['基準日'] || '')}</b>　·
+        上次重排 <span class="mono">${esc(U['重排日'] || '')}</span><br>${esc(U['規則'] || '')}
+      </div>
+      <div class="ugrid">
+        ${col('uadd', '本次新進', U['新進'] || [], '沒有異動')}
+        ${col('udrop', '本次剔除', U['剔除'] || [], '沒有異動')}
+      </div>
+      ${held.length ? `<div class="umeta" style="margin:12px 0 0">
+        因為<b>手上有部位</b>而保留追蹤（已掉出前 ${U['檔數']} 名）：
+        ${held.map(x => `${esc(x.name)} <span class="mono">${esc(x.code)}</span>`).join('、')}</div>` : ''}
+      <div class="unote">
+        <b>這裡的「剔除」跟上面的「掉出榜單」是兩件不同的事。</b>
+        上面是「條件不符合，明天不推薦買」；這裡是「這檔股票已經不在掃描範圍裡了」，
+        原因只有一個——它的近 60 日日均成交值掉出前 100 名，跟它的技術面好壞無關。
+        <br><b>剔除也不是賣出訊號。</b>手上有部位的股票就算掉出排名也會留在池子裡繼續追蹤，
+        出場一律由出場規則決定。
+        <br>之所以要每月重排，是因為原本那份固定 106 檔是用 2026 年 8 月的成交值挑出來的，
+        拿它回測 2016~2026 等於拿答案回去考試（選擇偏誤）。改成每月重排之後，
+        dashboard 的池子建構方式才跟十年回測一致，回測數字才真的在描述這套系統的行為。
+      </div>
+    </div>`;
+  })();
+  const nm = D.news_meta || {};
+  const bias = nm.bias || {};
+  document.getElementById('newsbar').innerHTML = nm.scanned_at
+    ? `新聞掃描時間 <span class="mono">${esc(nm.scanned_at)}</span>${nm.stale ? '　<span style="color:var(--warn)">（已超過一天，僅供參考）</span>' : ''}　·　只標記、不進入評分——這一層無法回測`
+      + (bias['合計'] ? `<div class="newsbias">本次掃描共 ${bias['合計']} 則：
+          <b>利多 ${bias['利多']}</b>　利空 ${bias['利空']}　中性 ${bias['中性']}。
+          ${bias['利空'] === 0 ? '<b>一則利空都沒有</b>——' : ''}這不代表這些股票沒有壞消息，
+          而是<b>新聞來源本身有方向偏誤</b>：觀察池是用成交值挑的（都是漲上來的股票），
+          財經媒體對漲的股票寫的就是多頭稿。所以新聞旗標會系統性地確認技術面已經說過的話，
+          看起來像獨立的第二意見，實際上是同一個訊號的回音。
+          <br>標「觀點」的那幾則（目標價、法人預估）是別人的看法不是事實——它看起來最像資訊，資訊量其實最低。</div>` : '')
+    : '<span style="color:var(--warn)">今天還沒做新聞掃描</span>';
+  renderPicks('swing', D.picks.swing,
+    '<strong>明天沒有符合條件的波段標的。</strong><br>沒有一檔同時滿足「站上 20MA、逼近 60 日高點、量能放大且未過熱」。空手也是一種部位，不必硬找標的。',
+    BR.swing);
+  renderPicks('position', D.picks.position, '<strong>明天沒有符合長線條件的標的。</strong>',
+    BR.position);
+
+  /* ---- 長期持有（ETF）：只顯示損益，不套用出場規則 ----
+     刻意跟上面的持股分開。那套規則（−8% 停損、2.5×ATR 移動停損、20MA、60日）
+     是為 1~4 週波段設計的，混在一起遲早會照錯的規則做錯的決定。 */
+  const LT = D['長期持有'] || {};
+  const ltEl = document.getElementById('longterm');
+  if (ltEl) {
+    const rows = LT['部位'] || [];
+    if (!rows.length) {
+      ltEl.innerHTML = '<div class="empty">還沒有長期持有部位。編輯 <code>portfolio/long_term.json</code> 就會出現在這裡。</div>';
+    } else {
+      const sg = v => (v >= 0 ? 'up' : 'down');
+      ltEl.innerHTML = `<div class="ltwrap">
+        <div class="lthead">
+          <div><div class="lab">總成本</div><div class="val num">${LT['總成本'].toLocaleString()}</div></div>
+          <div><div class="lab">總市值</div><div class="val num">${LT['總市值'].toLocaleString()}</div></div>
+          <div><div class="lab">總損益</div><div class="val num ${sg(LT['總損益'])}">${LT['總損益'] >= 0 ? '+' : ''}${LT['總損益'].toLocaleString()}</div></div>
+          <div><div class="lab">報酬率</div><div class="val num ${sg(LT['總報酬率'])}">${LT['總報酬率'] >= 0 ? '+' : ''}${LT['總報酬率'].toFixed(2)}%</div></div>
+        </div>
+        <div class="tw"><table><thead><tr>
+          <th>代號</th><th>名稱</th><th class="n">股數</th><th class="n">均價</th>
+          <th class="n">現價</th><th class="n">成本</th><th class="n">市值</th><th class="n">損益</th><th class="n">報酬率</th>
+        </tr></thead><tbody>
+        ${rows.map(r => `<tr>
+          <td class="mono">${esc(r.code)}</td><td>${esc(r.name)}</td>
+          <td class="n">${r['股數'].toLocaleString()}</td>
+          <td class="n">${r['均價'].toFixed(2)}</td>
+          <td class="n">${r['現價'] != null ? r['現價'].toFixed(2) : '—'}</td>
+          <td class="n">${r['成本'].toLocaleString()}</td>
+          <td class="n">${r['市值'] != null ? r['市值'].toLocaleString() : '—'}</td>
+          <td class="n ${r['損益'] != null ? sg(r['損益']) : ''}">${r['損益'] != null ? (r['損益'] >= 0 ? '+' : '') + r['損益'].toLocaleString() : '—'}</td>
+          <td class="n ${r['報酬率'] != null ? sg(r['報酬率']) : ''}">${r['報酬率'] != null ? (r['報酬率'] >= 0 ? '+' : '') + r['報酬率'].toFixed(2) + '%' : '—'}</td>
+        </tr>${r['備註'] ? `<tr><td colspan="9" class="ltnote">${esc(r['備註'])}</td></tr>` : ''}`).join('')}
+        </tbody></table></div>
+        <div class="ltfoot">
+          ${LT['報價日'] ? `報價日 <span class="mono">${esc(LT['報價日'])}</span>　·　` : ''}
+          這一區<strong>不產生任何進出建議</strong>。槓桿型 ETF 追蹤的是<strong>單日</strong>兩倍報酬、每天重新平衡，
+          在來回震盪的行情裡即使指數回到原點也會因路徑相依而耗損——這是商品結構，不是訊號，
+          也是它適合「方向看得很準」而不適合「放著不管」的原因。
+        </div>
+      </div>`;
+    }
+  }
+
+  /* ---- 持股 ---- */
+  const h = D.holdings || [];
+  const hEl = document.getElementById('holdings');
+  if (!h.length) {
+    hEl.innerHTML = `<div class="empty"><strong>還沒有記錄任何持股。</strong><br>
+      買進之後把「股票代碼、買進日期、成交均價、張數」告訴我，我會寫進 <code>portfolio/holdings.json</code>，
+      之後每天用同一套出場規則檢查它，該走的時候會直接說。</div>`;
+  } else {
+    const tone = a => a === '出清' ? 'var(--up)' : (a === '減碼一半' ? 'var(--warn)' : 'var(--down)');
+    hEl.innerHTML = `<div class="cards">${h.map(x => `<div class="card">
+      <div class="card-top">
+        <div><span class="name">${esc(x.name)}</span><span class="code mono">${x.code}</span></div>
+        <span class="badge" style="background:transparent;border-color:${tone(x['建議'])};color:${tone(x['建議'])}">${esc(x['建議'])}</span>
+      </div>
+      <div class="px" style="grid-template-columns:repeat(3,1fr)">
+        <div><div class="lab">成本</div><div class="val num">${x.entry_price.toLocaleString()}</div></div>
+        <div><div class="lab">現價</div><div class="val num">${x['現價'].toLocaleString()}</div></div>
+        <div><div class="lab">報酬</div><div class="val num ${cls(x['報酬率'])}">${sgn(x['報酬率'], 1)}</div></div>
+      </div>
+      <ul class="why">${x['理由'].map(y => `<li>${esc(y)}</li>`).join('')}</ul></div>`).join('')}</div>`;
+  }
+
+  /* ---- 回測結論 ---- */
+  const b = D.backtest;
+  document.getElementById('verdict').innerHTML = `
+    <h3>${esc(b.verdict_title)}</h3>
+    <p>${esc(b.verdict)}</p>`;
+
+  /* ---- 權益曲線 ---- */
+  const c = D.chart, W = 900, H = 320, P = { t: 14, r: 58, b: 26, l: 46 };
+  const series = [
+    { key: 'strategy', name: '本策略', color: 'var(--s1)' },
+    { key: 'equalweight', name: '等權重買進持有 30 檔', color: 'var(--s2)' },
+    { key: 'tsmc', name: '單押台積電', color: 'var(--s3)' },
+  ];
+  const all = series.flatMap(s => c[s.key]);
+  const ymin = Math.min(...all) * 0.98, ymax = Math.max(...all) * 1.02;
+  const X = i => P.l + i * (W - P.l - P.r) / (c.dates.length - 1);
+  const Y = v => P.t + (ymax - v) / (ymax - ymin) * (H - P.t - P.b);
+  const ticks = [1, 1.5, 2, 2.5, 3].filter(t => t >= ymin && t <= ymax);
+
+  document.getElementById('legend').innerHTML = series.map(s =>
+    `<span><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+
+  document.getElementById('chart').innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="策略權益曲線與買進持有比較">
+    ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/>
+      <text x="${P.l - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${t.toFixed(1)}x</text>`).join('')}
+    <line x1="${P.l}" x2="${W - P.r}" y1="${H - P.b}" y2="${H - P.b}" stroke="var(--axis)"/>
+    ${[0, Math.floor(c.dates.length / 2), c.dates.length - 1].map(i =>
+      `<text x="${X(i)}" y="${H - P.b + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${c.dates[i].slice(0, 7)}</text>`).join('')}
+    ${series.map(s => `<path d="${c[s.key].map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ')}"
+        fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`).join('')}
+    ${(() => {
+      const ends = series.map(s => ({ s, v: c[s.key][c[s.key].length - 1] }))
+        .sort((a, b2) => a.v - b2.v);
+      let prev = -Infinity;                      // 由上往下排，標籤太近就往下推開
+      const ys = [];
+      for (let k = ends.length - 1; k >= 0; k--) {
+        let y = Y(ends[k].v);
+        if (y - prev < 15) y = prev + 15;
+        ys[k] = y; prev = y;
+      }
+      const i = c.dates.length - 1;
+      return ends.map((e, k) => `<circle cx="${X(i)}" cy="${Y(e.v)}" r="4" fill="${e.s.color}" stroke="var(--surface)" stroke-width="2"/>
+        <text x="${X(i) + 9}" y="${ys[k] + 4}" font-size="12" fill="var(--ink-2)" font-weight="500">${e.v.toFixed(2)}x</text>`).join('');
+    })()}
+    <line id="cross" y1="${P.t}" y2="${H - P.b}" stroke="var(--axis)" stroke-width="1" style="opacity:0"/>
+    <rect id="hit" x="${P.l}" y="${P.t}" width="${W - P.l - P.r}" height="${H - P.t - P.b}" fill="transparent"/>
+  </svg>`;
+
+  const svg = document.querySelector('#chart svg'), tip = document.getElementById('tip'), cross = document.getElementById('cross');
+  const move = e => {
+    const box = svg.getBoundingClientRect();
+    const px = (e.clientX - box.left) / box.width * W;
+    let i = Math.round((px - P.l) / (W - P.l - P.r) * (c.dates.length - 1));
+    i = Math.max(0, Math.min(c.dates.length - 1, i));
+    cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.style.opacity = .6;
+    tip.style.opacity = 1;
+    tip.innerHTML = `<b>${c.dates[i]}</b><br>` + series.map(s =>
+      `<span class="sw" style="display:inline-block;width:10px;height:3px;background:${s.color};margin-right:5px"></span>${s.name} <b class="num">${c[s.key][i].toFixed(2)}x</b>`).join('<br>');
+    const host = svg.parentElement.getBoundingClientRect();
+    tip.style.left = Math.min(host.width - 190, Math.max(0, e.clientX - host.left + 14)) + 'px';
+    tip.style.top = (e.clientY - host.top - 10) + 'px';
+  };
+  svg.addEventListener('mousemove', move);
+  svg.addEventListener('mouseleave', () => { tip.style.opacity = 0; cross.style.opacity = 0; });
+
+  /* ---- 表格 ---- */
+  const table = (el, head, rows) => {
+    document.getElementById(el).innerHTML =
+      `<thead><tr>${head.map((h, i) => `<th${i ? ' class="num"' : ''}>${h}</th>`).join('')}</tr></thead>
+       <tbody>${rows.map(r => `<tr>${r.map((v, i) => `<td${i ? ' class="num"' : ''}>${v}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  };
+  table('exitTable', ['出場原因', '次數', '平均報酬'],
+    c.exit_reasons.sort((a, b2) => b2.n - a.n).map(x =>
+      [esc(x.reason), x.n, `<span class="${cls(x.avg)}">${sgn(x.avg, 1)}</span>`]));
+  const warns = D['資料警告'] || [];
+  const st = D['資料狀態'] || {};
+  const el = document.getElementById('dataWarn');
+  if (warns.length) {
+    el.innerHTML = `<div class="datawarn"><b>資料有問題，明天的推薦請保留看待</b>
+      <ul>${warns.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>`;
+  } else if (st['股價']) {
+    el.innerHTML = `<div class="dataok">資料檢查通過 — 股價 ${esc(st['股價']['最新日期'])}（${esc(st['股價']['覆蓋'])}）、`
+      + `籌碼 ${esc(st['籌碼']['最新日期'])}（${esc(st['籌碼']['覆蓋'])}）、加權指數 ${esc(st['加權指數']['最新日期'])}</div>`;
+  }
+  table('oosTable', ['期間', '本策略', '等權重買進持有'], D.oos);
+  const vcls = v => v === '採用' ? 'v-use' : (v === '只顯示' ? 'v-show' : 'v-drop');
+  document.getElementById('factorTable').innerHTML =
+    `<thead><tr><th>因子</th><th class="num">樣本內 IC</th><th class="num">樣本外 IC</th><th class="num">判定</th></tr></thead>
+     <tbody>${c.factors.map(f => `<tr>
+       <td>${esc(f.factor)}</td>
+       <td class="num">${f.is_ic.toFixed(3)}</td>
+       <td class="num ${f.oos_ic * f.is_ic < 0 ? 'down' : ''}">${f.oos_ic.toFixed(3)}</td>
+       <td class="num"><span class="verdict-tag ${vcls(f.verdict)}">${f.verdict}</span></td></tr>`).join('')}</tbody>`;
+
+  document.getElementById('foot').innerHTML =
+    `資料來源：臺灣證券交易所 OpenAPI、Yahoo Finance 公開行情。${esc(D.disclaimer)}`;
+})();
+</script>
