@@ -1,0 +1,24 @@
+# 從程式碼實際 import 的東西列出來的，不是憑印象抄的清單。
+# 掃過專案裡全部 35 支 .py，扣掉標準庫與本地模組之後，外部相依只有三個。
+#
+#   pandas    28 支用到
+#   numpy     15 支用到
+#   requests   3 支用到（daily_update / fetch_data / fetch_universe，只在使用者電腦上跑）
+#
+# 下限取的是「這些 API 確定存在」的版本，不是我實測過的最低版本——
+# 程式用到的都是很基本的東西（merge_asof、to_period、rolling、default_rng），
+# 沒有任何 2.x 才有的 API。
+#
+# 開發與實測環境：Python 3.11.15 / pandas 3.0.2 / numpy 2.4.4 / requests 2.33.1
+
+pandas>=1.5
+numpy>=1.23
+requests>=2.28
+
+# Windows 沒有內建 IANA 時區資料庫，少了它 signals.py 的
+# ZoneInfo("Asia/Taipei") 會直接拋 ZoneInfoNotFoundError。
+# Linux/macOS 用系統的就夠，不需要裝。
+tzdata; platform_system == "Windows"
+
+# 開發時另外用到、但跑系統本身不需要的：
+#   playwright  只用來對儀表板做 headless 渲染檢查與截圖
